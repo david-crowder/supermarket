@@ -1,3 +1,8 @@
+v2.9.1 (2014-08-29)
+-------------------
+
+- [#53] Add CHEF\_OAUTH2\_VERIFY\_SSL configuration variable
+
 v2.9.0 (2014-08-28)
 -------------------
 - [#51] Add chef-vault support for the application data bag
