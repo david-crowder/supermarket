@@ -1,5 +1,5 @@
 name 'supermarket'
-version '2.11.0'
+version '2.12.0'
 maintainer 'Chef Software, Inc.'
 maintainer_email 'cookbooks@getchef.com'
 license 'Apache v2.0'
@@ -7,6 +7,8 @@ description 'Stands up the Supermarket application stack'
 long_description IO.read(File.join(File.dirname(__FILE__), 'README.md'))
 
 supports 'ubuntu'
+supports 'centos'
+supports 'redhat'
 
 recipe 'supermarket::default',
        'Installs Supermarket and all dependencies for production'
