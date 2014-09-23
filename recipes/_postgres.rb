@@ -17,7 +17,12 @@
 # limitations under the License.
 #
 
-include_recipe 'supermarket::_apt'
+case node['platform_family']
+when 'debian'
+  include_recipe 'supermarket::_apt'
+when 'rhel'
+  include_recipe 'supermarket::_yum'
+end
 
 package 'postgresql'
 package 'postgresql-contrib'

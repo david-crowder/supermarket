@@ -17,23 +17,39 @@
 # limitations under the License.
 #
 
-include_recipe 'supermarket::_apt'
+case node['platform_family']
+when 'debian'
+  include_recipe 'supermarket::_apt'
 
-execute 'apt-get-update-ruby-only' do
-  command "apt-get update -o Dir::Etc::sourcelist='sources.list.d/brightbox-ruby-ng-experimental-precise.list' -o Dir::Etc::sourceparts='-' -o APT::Get::List-Cleanup='0'"
-  notifies :run, 'execute[apt-cache gencaches]'
-  action :nothing
-  ignore_failure true
+  execute 'apt-get-update-ruby-only' do
+    command "apt-get update -o Dir::Etc::sourcelist='sources.list.d/brightbox-ruby-ng-experimental-precise.list' -o Dir::Etc::sourceparts='-' -o APT::Get::List-Cleanup='0'"
+    notifies :run, 'execute[apt-cache gencaches]'
+    action :nothing
+    ignore_failure true
+  end
+
+  execute 'add-apt-repository[ppa:brightbox]' do
+    command 'add-apt-repository ppa:brightbox/ruby-ng-experimental'
+    notifies :run, 'execute[apt-get-update-ruby-only]', :immediately
+    not_if 'test -f /etc/apt/sources.list.d/brightbox-ruby-ng-experimental-precise.list'
+  end
+  
+  package 'ruby2.0'
+  package 'ruby2.0-dev'
+when 'rhel'
+  include_recipe 'supermarket::_yum'
+  include_recipe 'supermarket::_git'
+
+  execute 'ruby-build-2.1.3' do
+    cwd "#{Chef::Config[:file_cache_path]}"
+    command <<-EOH
+      git clone https://github.com/sstephenson/ruby-build.git
+      cd ruby-build
+      ./install.sh
+      ruby-build 2.1.3 /usr/local/ruby-2.1.3
+    EOH
+  end
 end
-
-execute 'add-apt-repository[ppa:brightbox]' do
-  command 'add-apt-repository ppa:brightbox/ruby-ng-experimental'
-  notifies :run, 'execute[apt-get-update-ruby-only]', :immediately
-  not_if 'test -f /etc/apt/sources.list.d/brightbox-ruby-ng-experimental-precise.list'
-end
-
-package 'ruby2.0'
-package 'ruby2.0-dev'
 
 %w{erb gem irb rake rdoc ri ruby testrb}.each do |rb|
   link "/usr/bin/#{rb}" do
@@ -45,15 +61,27 @@ end
 package 'build-essential'
 
 # Nokogiri requires XML
-package 'libxslt-dev'
-package 'libxml2-dev'
+case node['platform_family']
+when 'debian'
+  package 'libxslt-dev'
+  package 'libxml2-dev'
+when 'rhel'
+  package 'libxslt-devel'
+  package 'libxml2-devel'
+end
 
 # SQLite3 requires development headers
-package 'libsqlite3-dev'
+case node['platform_family']
+when 'debian'
+  package 'libsqlite3-dev'
+end
 
 # `pg` requires development headers; this allows the application to deploy (bundle)
 # when postgresql isn't running on the same node.
-package 'libpq-dev'
+case node['platform_family']
+when 'debian'
+  package 'libpq-dev'
+end
 
 gem_package 'bundler' do
   version '>= 1.7.2'

@@ -1,8 +1,6 @@
 #
-# Author:: Tristan O'Neil (<tristanoneil@gmail.com>)
-# Recipe:: nginx
-#
-# Copyright 2014 Chef Software, Inc.
+# Author:: Nathan Cerny (<Nathan.Cerny@Cerner.com>)
+# Recipe:: _yum
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,28 +15,22 @@
 # limitations under the License.
 #
 
-case node['platform_family']
-when 'debian'
-  include_recipe 'supermarket::_apt'
-when 'rhel'
-  include_recipe 'supermarket::_yum'
+execute 'yum -y update' do
+  ignore_failure true
 end
 
-package 'nginx'
-
-template '/etc/nginx/sites-available/default' do
-  source 'supermarket.nginx.erb'
-  notifies :reload, 'service[nginx]'
+#TODO: Make this dynamic so it flexes on RHEL version
+remote_file "#{Chef::Config[:file_cache_path]}/epel-release-6-8.noarch.rpm" do
+  source 'http://mirror.pnl.gov/epel/6/i386/epel-release-6-8.noarch.rpm'
 end
 
-service 'nginx' do
-  supports reload: true
-  action [:enable, :start]
+execute 'add-yum-epel' do
+  command "rpm -Uvh #{Chef::Config[:file_cache_path]}/epel-release-6-8.noarch.rpm"
+  not_if 'rpm -q | epel'
 end
 
-cookbook_file "/etc/logrotate.d/nginx" do
-  source "logrotate-nginx"
-  owner "root"
-  group "root"
-  mode "0644"
+execute 'yum makecache' do
+  ignore_failure true
+  action :nothing
 end
+

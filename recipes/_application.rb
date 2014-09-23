@@ -17,7 +17,13 @@
 # limitations under the License.
 #
 
-include_recipe 'supermarket::_apt'
+case node['platform_family']
+when 'debian'
+  include_recipe 'supermarket::_apt'
+when 'rhel'
+  include_recipe 'supermarket::_yum'
+end
+
 include_recipe 'supermarket::_ruby'
 
 directory "#{node['supermarket']['home']}/shared" do
