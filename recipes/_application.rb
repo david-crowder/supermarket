@@ -91,6 +91,7 @@ deploy_revision node['supermarket']['home'] do
 
     execute 'bundle install' do
       cwd release_path
+      environment ({'PATH' => '/usr/local/ruby-2.1.3/bin:$PATH'}) if platform_family?('rhel')
       command "bundle install --without test development --path=#{node['supermarket']['home']}/shared/bundle"
     end
   end
@@ -99,6 +100,7 @@ deploy_revision node['supermarket']['home'] do
     execute 'asset:precompile' do
       environment 'RAILS_ENV' => 'production'
       cwd release_path
+      environment ({'PATH' => '/usr/local/ruby-2.1.3/bin:$PATH'}) if platform_family?('rhel')
       command 'bundle exec rake assets:precompile'
     end
   end
@@ -109,6 +111,7 @@ deploy_revision node['supermarket']['home'] do
       group 'supermarket'
       environment 'RAILS_ENV' => 'production'
       cwd release_path
+      environment ({'PATH' => '/usr/local/ruby-2.1.3/bin:$PATH'}) if platform_family?('rhel')
       command 'bundle exec rake sitemap:refresh:no_ping'
       not_if { ::File.exists?('public/sitemap.xml.gz') }
     end
@@ -118,6 +121,7 @@ deploy_revision node['supermarket']['home'] do
       group 'supermarket'
       environment 'RAILS_ENV' => 'production'
       cwd release_path
+      environment ({'PATH' => '/usr/local/ruby-2.1.3/bin:$PATH'}) if platform_family?('rhel')
       command 'bundle exec rake db:seed'
     end
   end
