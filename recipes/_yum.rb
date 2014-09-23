@@ -15,10 +15,6 @@
 # limitations under the License.
 #
 
-execute 'yum -y update' do
-  ignore_failure true
-end
-
 #TODO: Make this dynamic so it flexes on RHEL version
 remote_file "#{Chef::Config[:file_cache_path]}/epel-release-6-8.noarch.rpm" do
   source 'http://mirror.pnl.gov/epel/6/i386/epel-release-6-8.noarch.rpm'
@@ -26,7 +22,7 @@ end
 
 execute 'add-yum-epel' do
   command "rpm -Uvh #{Chef::Config[:file_cache_path]}/epel-release-6-8.noarch.rpm"
-  not_if 'rpm -q | epel'
+  not_if 'rpm -qa | grep epel'
 end
 
 execute 'yum makecache' do

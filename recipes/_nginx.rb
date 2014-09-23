@@ -26,6 +26,10 @@ end
 
 package 'nginx'
 
+directory '/etc/nginx/sites-available' do
+  recursive true
+end
+
 template '/etc/nginx/sites-available/default' do
   source 'supermarket.nginx.erb'
   notifies :reload, 'service[nginx]'
@@ -35,6 +39,8 @@ service 'nginx' do
   supports reload: true
   action [:enable, :start]
 end
+
+directory '/etc/logrotate.d'
 
 cookbook_file "/etc/logrotate.d/nginx" do
   source "logrotate-nginx"

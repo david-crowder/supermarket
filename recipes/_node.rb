@@ -27,7 +27,13 @@ when 'rhel'
 end
 
 package 'python'
-package 'g++'
+case node['platform_family']
+when 'debian'
+  package 'g++'
+when 'rhel'
+  package 'gcc'
+  package 'gcc-c++'
+end
 package 'make'
 
 case node['platform_family']

@@ -52,12 +52,18 @@ directory '/var/lib/redis' do
   recursive true
 end
 
+directory '/etc/redis' do
+  owner  'root'
+  group  'root'
+  mode   '0644'
+end
+
 template '/etc/redis/redis.conf' do
   source 'redis.conf.erb'
   owner  'root'
   group  'root'
   mode   '0644'
-  notifies :restart, 'service[redis-server]'
+  notifies :restart, "service[#{redis_service}]"
 end
 
 service "#{redis_service}" do

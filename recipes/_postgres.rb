@@ -26,6 +26,16 @@ end
 
 package 'postgresql'
 package 'postgresql-contrib'
+package 'postgresql-server' if platform_family?('rhel')
+
+execute 'postgres-initdb' do
+  command 'service postgresql initdb'
+  not_if {File.exists?('/var/lib/pgsql/data/PG_VERSION')}
+end
+
+service 'postgresql' do
+  action [:enable, :start]
+end
 
 execute 'postgres[user]' do
   user 'postgres'
@@ -62,8 +72,4 @@ end
 
 template "/etc/postgresql/#{node['postgres']['version']}/main/pg_hba.conf" do
   notifies :restart, 'service[postgresql]', :immediately
-end
-
-service 'postgresql' do
-  action [:enable, :start]
 end

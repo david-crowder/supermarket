@@ -40,14 +40,22 @@ when 'rhel'
   include_recipe 'supermarket::_yum'
   include_recipe 'supermarket::_git'
 
-  execute 'ruby-build-2.1.3' do
+  package 'openssl'
+  package 'openssl-devel'
+
+  execute 'install-ruby-build' do
     cwd "#{Chef::Config[:file_cache_path]}"
     command <<-EOH
       git clone https://github.com/sstephenson/ruby-build.git
       cd ruby-build
       ./install.sh
-      ruby-build 2.1.3 /usr/local/ruby-2.1.3
     EOH
+    not_if {File.exists?('/usr/local/bin/ruby-build')}
+  end
+
+  execute 'install-ruby-2.1.3' do
+    command 'ruby-build 2.1.3 /usr/local/ruby-2.1.3'
+    not_if {File.exists?('/usr/local/ruby-2.1.3')}
   end
 end
 
@@ -58,7 +66,15 @@ end
 end
 
 # the bundle contains gems that need to compile C extensions
-package 'build-essential'
+case node['platform_family']
+when 'debian'
+  package 'build-essential'
+when 'rhel'
+  packages = %w{autoconf bison flex gcc gcc-c++ kernel-devel make m4 patch}
+  packages.each do |p|
+    package p
+  end
+end
 
 # Nokogiri requires XML
 case node['platform_family']
