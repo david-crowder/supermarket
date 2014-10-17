@@ -17,44 +17,41 @@
 # limitations under the License.
 #
 
-include_recipe 'supermarket::_apt'
+# execute "source_etc_profile" do
+#   command "source /etc/profile"
+#   action :nothing
+# end
 
-execute 'apt-get-update-ruby-only' do
-  command "apt-get update -o Dir::Etc::sourcelist='sources.list.d/brightbox-ruby-ng-experimental-precise.list' -o Dir::Etc::sourceparts='-' -o APT::Get::List-Cleanup='0'"
-  notifies :run, 'execute[apt-cache gencaches]'
-  action :nothing
-  ignore_failure true
-end
+# file "/etc/profile.d/chef_ruby.sh" do 
+#  content <<-EOD
+#    export PATH=/opt/chef/embedded/bin/:$PATH
+#  EOD
+#  notifies :run, "execute[source_etc_profile]"
+# end
 
-execute 'add-apt-repository[ppa:brightbox]' do
-  command 'add-apt-repository ppa:brightbox/ruby-ng-experimental'
-  notifies :run, 'execute[apt-get-update-ruby-only]', :immediately
-  not_if 'test -f /etc/apt/sources.list.d/brightbox-ruby-ng-experimental-precise.list'
-end
+node.default[:chruby_install][:default_ruby] = true
+node.default[:rubies][:list] = [ 'ruby 2.0.0-p576' ]
+node.default[:rubies][:bundler][:install] = false
 
-package 'ruby2.0'
-package 'ruby2.0-dev'
+include_recipe 'rubies'
 
-%w{erb gem irb rake rdoc ri ruby testrb}.each do |rb|
+%w{erb gem irb rake rdoc ri ruby testrb bundle bundler }.each do |rb|
   link "/usr/bin/#{rb}" do
-    to "/usr/bin/#{rb}2.0"
+    to "/opt/rubies/ruby-2.0.0-p576/bin/#{rb}"
   end
 end
 
-# the bundle contains gems that need to compile C extensions
-package 'build-essential'
-
-# Nokogiri requires XML
-package 'libxslt-dev'
-package 'libxml2-dev'
-
-# SQLite3 requires development headers
-package 'libsqlite3-dev'
-
-# `pg` requires development headers; this allows the application to deploy (bundle)
-# when postgresql isn't running on the same node.
-package 'libpq-dev'
+node['supermarket']['gem']['dep_packages'].each do |pkg|
+  package pkg
+end
 
 gem_package 'bundler' do
-  version '>= 1.7.2'
+  gem_binary("/opt/rubies/ruby-2.0.0-p576/bin/gem")
+  version '>= 1.7.3'
+end
+
+%w{ bundle bundler }.each do |rb|
+  link "/usr/bin/#{rb}" do
+    to "/opt/rubies/ruby-2.0.0-p576/bin/#{rb}"
+  end
 end
